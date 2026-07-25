@@ -1,3 +1,28 @@
+/datum/action/item_action/hands_free/connect_tank
+	name = "Adjust mask"
+	button_icon_state = "internal"
+	toggleable = TRUE
+	action_type = AB_INNATE
+
+/datum/action/item_action/hands_free/connect_tank/Activate()
+	if(!owner.wear_mask && !owner.incapacitated())
+		return
+	var/obj/item/clothing/mask/breath/breath_mask = owner.wear_mask
+	breath_mask.toggle_breath(owner)
+	if(breath_mask.attached_tank) // check, we just hangling mask or activate it
+		active = TRUE
+
+	UpdateButtonIcon()
+
+/datum/action/item_action/hands_free/connect_tank/Deactivate()
+	if(!owner.wear_mask && !owner.incapacitated())
+		return
+	var/obj/item/clothing/mask/breath/breath_mask = owner.wear_mask
+	breath_mask.toggle_breath(owner)
+	if(!breath_mask.attached_tank)
+		active = FALSE
+	UpdateButtonIcon()
+
 /obj/item/clothing/mask/breath
 	desc = "A close-fitting mask that can be connected to an air supply."
 	name = "breath mask"
@@ -8,56 +33,40 @@
 	w_class = SIZE_TINY
 	gas_transfer_coefficient = 0.10
 	permeability_coefficient = 0.50
+	var/obj/item/weapon/tank/attached_tank = null
 	var/active = FALSE
 	var/adjustible = TRUE
 	item_action_types = list(/datum/action/item_action/hands_free/connect_tank)
 
-/obj/item/clothing/mask/breath/atom_init()
-	. = ..()
-	RegisterSignal(src, COMSIG_ITEM_EQUIPPED, PROC_REF(toggle_breath))
-
 /obj/item/clothing/mask/breath/Destroy()
 	. = ..()
-	UnregisterSignal(src, COMSIG_ITEM_EQUIPPED)
+	QDEL_NULL(attached_tank) // destriy attached
 
-/datum/action/item_action/hands_free/connect_tank
-	name = "Adjust mask"
-	button_icon_state = "internal"
-	toggleable = TRUE
-	action_type = AB_INNATE
+/obj/item/clothing/mask/breath/equipped(mob/user, slot)
+	. = ..()
+	if(src == user.wear_mask)
+		toggle_breath(user)
 
-/datum/action/item_action/hands_free/connect_tank/Activate()
-	if(!owner.wear_mask)
-		return
-	var/obj/item/clothing/mask/breath/breath_mask = owner.wear_mask
-	breath_mask.toggle_breath(src, owner)
-	if(owner.internal)
-		active = TRUE
-	UpdateButtonIcon()
+/obj/item/clothing/mask/breath/dropped(mob/user)
+	. = ..()
+	if(active)
+		toggle_breath(user)
+		update_action_icons(user, FALSE)
 
-/datum/action/item_action/hands_free/connect_tank/Deactivate()
-	if(!owner.wear_mask)
-		return
-	var/obj/item/clothing/mask/breath/breath_mask = owner.wear_mask
-	breath_mask.toggle_breath(src, owner)
-	if(!owner.internal)
-		active = FALSE
-	UpdateButtonIcon()
-
-/obj/item/clothing/mask/breath/proc/toggle_breath(source, mob/user = usr)
-	if(!user.incapacitated())
-		if(src == user.wear_mask)
-			if(adjustible) // if mask on face but pushed down
-				update_hanging()
-			if(!active)
-				connect_tank(user)
-			else
-				detach_tank(user)
-
-			update_item_actions()
-			active = !active
+/obj/item/clothing/mask/breath/proc/toggle_breath(mob/user = usr)
+	if(!active)
+		connect_tank(user)
+	else
+		detach_tank(src, user)
+	if(adjustible)
+		update_hanging()
+	active = !active
+	update_item_actions()
 
 /obj/item/clothing/mask/breath/proc/update_hanging()
+	if(!adjustible) // if mask on face but pushed down
+		return
+
 	if(!active)
 		gas_transfer_coefficient = 0.10
 		flags |= MASKCOVERSMOUTH | MASKINTERNALS
@@ -92,13 +101,13 @@
 		to_chat(user, "You didn`t choose some tank.")
 		return FALSE
 
-	var/obj/item/weapon/tank/tank = choose
-	tank.toggle_internals()
+	attached_tank = choose
+	attached_tank.toggle_internals()
 	return TRUE
 
-/obj/item/clothing/mask/breath/proc/detach_tank(mob/user)
-	if(user.internal)
-		user.internal.close_internals(user)
+/obj/item/clothing/mask/breath/proc/detach_tank(source, mob/user)
+	if(attached_tank)
+		attached_tank.close_internals(src, user)
 		return TRUE
 	return FALSE
 

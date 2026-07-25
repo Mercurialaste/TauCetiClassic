@@ -21,14 +21,12 @@
 	var/distribute_pressure = ONE_ATMOSPHERE
 	var/integrity = 3
 	var/volume = 70
-	var/internal_switch = 0
 						//If they have and we haven't scanned it with the PDA or gas analyzer then we might just breath whatever they put in it.
 
 	var/reaction_in_progress = FALSE
 
 /obj/item/weapon/tank/atom_init()
 	. = ..()
-	RegisterSignal(src, COMSIG_ITEM_DROPPED, PROC_REF(detach_breath))
 	air_contents = new
 	air_contents.volume = volume //liters
 	air_contents.temperature = T20C
@@ -36,17 +34,20 @@
 	START_PROCESSING(SSobj, src)
 
 /obj/item/weapon/tank/Destroy()
-	UnregisterSignal(src, COMSIG_ITEM_DROPPED)
 	STOP_PROCESSING(SSobj, src)
 	QDEL_NULL(air_contents)
 	return ..()
 
-/obj/item/weapon/tank/proc/detach_breath(source, mob/user)
-	if(user.internal == src && src.loc != user)
-		close_internals(user)
-		if(user && user.wear_mask && user.wear_mask.flags & MASKINTERNALS)
-			var/obj/item/clothing/mask/breath/breath_mask = user.wear_mask
-			breath_mask.update_action_icons(user, FALSE)
+/obj/item/weapon/tank/dropped(mob/user)
+	. = ..()
+	detach_breath(user)
+
+/obj/item/weapon/tank/proc/detach_breath(mob/user)
+	if(user && user.wear_mask && user.wear_mask.flags & MASKINTERNALS)
+		var/obj/item/clothing/mask/breath/breath_mask = user.wear_mask
+		if(breath_mask.attached_tank == src && src.loc != user)
+			if(breath_mask.active)
+				breath_mask.toggle_breath(user)
 
 /obj/item/weapon/tank/examine(mob/user)
 	..()
@@ -165,15 +166,19 @@
 			if(.)
 				distribute_pressure = clamp(round(pressure), TANK_MIN_RELEASE_PRESSURE, TANK_MAX_RELEASE_PRESSURE)
 		if("internal")
-			toggle_internals()
+			if(usr?.wear_mask && isbreathmask(usr.wear_mask))
+				var/obj/item/clothing/mask/breath/breath_mask = usr.wear_mask
+				breath_mask.toggle_breath()
 
-/obj/item/weapon/tank/proc/close_internals(mob/C)
-	C.internal = null
+/obj/item/weapon/tank/proc/close_internals(source, mob/C)
+	C.internal = null	// refactor this and delete
 	to_chat(usr, "<span class='notice'>You close the tank release valve.</span>")
 	var/internalsound = 'sound/misc/internaloff.ogg'
 	if(isbreathmask(C.wear_mask))
 		var/obj/item/clothing/mask/breath/breath_mask = C.wear_mask
 		breath_mask.update_action_icons(C, FALSE)
+		if(breath_mask.attached_tank) // secure check, becouse we have option to open and close tank inside tgui
+			breath_mask.attached_tank = null
 	if(ishuman(C)) // Because only human can wear a spacesuit
 		var/mob/living/carbon/human/H = C
 		if(istype(H.head, /obj/item/clothing/head/helmet/space) && istype(H.wear_suit, /obj/item/clothing/suit/space))
@@ -181,20 +186,25 @@
 	playsound(src, internalsound, VOL_EFFECTS_MASTER, null, FALSE, null, -5)
 
 /obj/item/weapon/tank/proc/open_internals(mob/C)
-	if(isbreathmask(C.wear_mask))
-		var/obj/item/clothing/mask/breath/breath_mask = C.wear_mask
-		if(breath_mask && (breath_mask.flags & MASKINTERNALS))
-			C.internal = src
-			breath_mask.update_action_icons(C, TRUE)
-			to_chat(usr, "<span class='notice'>You open \the [src] valve.</span>")
-			var/internalsound = 'sound/misc/internalon.ogg'
-			if(ishuman(C)) // Because only human can wear a spacesuit
-				var/mob/living/carbon/human/H = C
-				if(istype(H.head, /obj/item/clothing/head/helmet/space) && istype(H.wear_suit, /obj/item/clothing/suit/space))
-					internalsound = 'sound/misc/riginternalon.ogg'
-			playsound(src, internalsound, VOL_EFFECTS_MASTER, null, FALSE, null, -5)
-	else
+	if(!isbreathmask(C.wear_mask))
 		to_chat(usr, "<span class='notice'>You need something to connect to \the [src].</span>")
+		return
+	var/obj/item/clothing/mask/breath/breath_mask = C.wear_mask
+	if(breath_mask)
+		if(!(breath_mask.flags & MASKINTERNALS))
+			breath_mask.update_hanging()
+		C.internal = src	// refactor this and delete
+		if(!breath_mask.attached_tank || breath_mask.attached_tank != src) // secure check, becouse we have option to open and close tank inside tgui
+			breath_mask.attached_tank = src
+		breath_mask.update_action_icons(C, TRUE)
+		to_chat(usr, "<span class='notice'>[bicon(src)]You open \the [src] valve.</span>")
+		var/internalsound = 'sound/misc/internalon.ogg'
+		if(ishuman(C)) // Because only human can wear a spacesuit
+			var/mob/living/carbon/human/H = C
+			if(istype(H.head, /obj/item/clothing/head/helmet/space) && istype(H.wear_suit, /obj/item/clothing/suit/space))
+				internalsound = 'sound/misc/riginternalon.ogg'
+		playsound(src, internalsound, VOL_EFFECTS_MASTER, null, FALSE, null, -5)
+
 
 /obj/item/weapon/tank/proc/toggle_internals()
 	if(!iscarbon(loc))
@@ -202,11 +212,10 @@
 
 	var/mob/living/carbon/C = loc
 	if(C.internal == src)
-		close_internals(C)
+		close_internals(src, C)
 	else
 		open_internals(C)
 
-	internal_switch = world.time + 1 SECOND
 
 /obj/item/weapon/tank/remove_air(amount)
 	return air_contents.remove(amount)
