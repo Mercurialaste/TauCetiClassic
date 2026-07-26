@@ -38,17 +38,6 @@
 	QDEL_NULL(air_contents)
 	return ..()
 
-/obj/item/weapon/tank/dropped(mob/user)
-	. = ..()
-	detach_breath(user)
-
-/obj/item/weapon/tank/proc/detach_breath(mob/user)
-	if(user && user.wear_mask && user.wear_mask.flags & MASKINTERNALS)
-		var/obj/item/clothing/mask/breath/breath_mask = user.wear_mask
-		if(breath_mask.attached_tank == src && src.loc != user)
-			if(breath_mask.active)
-				breath_mask.toggle_breath(user)
-
 /obj/item/weapon/tank/examine(mob/user)
 	..()
 	var/obj/O = src

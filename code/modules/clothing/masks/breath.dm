@@ -54,20 +54,20 @@
 		update_action_icons(user, FALSE)
 
 /obj/item/clothing/mask/breath/proc/toggle_breath(mob/user = usr)
-	if(!active)
+	active = !active
+	if(active)
 		connect_tank(user)
 	else
 		detach_tank(src, user)
 	if(adjustible)
 		update_hanging()
-	active = !active
 	update_item_actions()
 
 /obj/item/clothing/mask/breath/proc/update_hanging()
 	if(!adjustible) // if mask on face but pushed down
 		return
 
-	if(!active)
+	if(active)
 		gas_transfer_coefficient = 0.10
 		flags |= MASKCOVERSMOUTH | MASKINTERNALS
 		icon_state = "[initial(icon_state)]_UP"
@@ -103,7 +103,15 @@
 
 	attached_tank = choose
 	attached_tank.toggle_internals()
+	RegisterSignals(attached_tank, list(COMSIG_PARENT_QDELETING, COMSIG_ITEM_DROPPED), PROC_REF(drop_detach_tank), user)
 	return TRUE
+
+/obj/item/clothing/mask/breath/proc/drop_detach_tank(obj/source, mob/user)
+	if(source.loc == user)
+		return
+	if(attached_tank && active)
+		toggle_breath(user)
+		UnregisterSignal(source, list(COMSIG_PARENT_QDELETING, COMSIG_ITEM_DROPPED))
 
 /obj/item/clothing/mask/breath/proc/detach_tank(source, mob/user)
 	if(attached_tank)
