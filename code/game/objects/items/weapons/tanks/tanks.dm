@@ -159,53 +159,6 @@
 				var/obj/item/clothing/mask/breath/breath_mask = usr.wear_mask
 				breath_mask.toggle_breath()
 
-/obj/item/weapon/tank/proc/close_internals(source, mob/C)
-	C.internal = null	// refactor this and delete
-	to_chat(usr, "<span class='notice'>You close the tank release valve.</span>")
-	var/internalsound = 'sound/misc/internaloff.ogg'
-	if(isbreathmask(C.wear_mask))
-		var/obj/item/clothing/mask/breath/breath_mask = C.wear_mask
-		breath_mask.update_action_icons(C, FALSE)
-		if(breath_mask.attached_tank) // secure check, becouse we have option to open and close tank inside tgui
-			breath_mask.attached_tank = null
-	if(ishuman(C)) // Because only human can wear a spacesuit
-		var/mob/living/carbon/human/H = C
-		if(istype(H.head, /obj/item/clothing/head/helmet/space) && istype(H.wear_suit, /obj/item/clothing/suit/space))
-			internalsound = 'sound/misc/riginternaloff.ogg'
-	playsound(src, internalsound, VOL_EFFECTS_MASTER, null, FALSE, null, -5)
-
-/obj/item/weapon/tank/proc/open_internals(mob/C)
-	if(!isbreathmask(C.wear_mask))
-		to_chat(usr, "<span class='notice'>You need something to connect to \the [src].</span>")
-		return
-	var/obj/item/clothing/mask/breath/breath_mask = C.wear_mask
-	if(breath_mask)
-		if(!(breath_mask.flags & MASKINTERNALS))
-			breath_mask.update_hanging()
-		C.internal = src	// refactor this and delete
-		if(!breath_mask.attached_tank || breath_mask.attached_tank != src) // secure check, becouse we have option to open and close tank inside tgui
-			breath_mask.attached_tank = src
-		breath_mask.update_action_icons(C, TRUE)
-		to_chat(usr, "<span class='notice'>[bicon(src)]You open \the [src] valve.</span>")
-		var/internalsound = 'sound/misc/internalon.ogg'
-		if(ishuman(C)) // Because only human can wear a spacesuit
-			var/mob/living/carbon/human/H = C
-			if(istype(H.head, /obj/item/clothing/head/helmet/space) && istype(H.wear_suit, /obj/item/clothing/suit/space))
-				internalsound = 'sound/misc/riginternalon.ogg'
-		playsound(src, internalsound, VOL_EFFECTS_MASTER, null, FALSE, null, -5)
-
-
-/obj/item/weapon/tank/proc/toggle_internals()
-	if(!iscarbon(loc))
-		return
-
-	var/mob/living/carbon/C = loc
-	if(C.internal == src)
-		close_internals(src, C)
-	else
-		open_internals(C)
-
-
 /obj/item/weapon/tank/remove_air(amount)
 	return air_contents.remove(amount)
 

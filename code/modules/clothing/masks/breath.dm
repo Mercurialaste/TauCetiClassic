@@ -102,7 +102,7 @@
 		return FALSE
 
 	attached_tank = choose
-	attached_tank.toggle_internals()
+	open_internals(user)
 	RegisterSignals(attached_tank, list(COMSIG_PARENT_QDELETING, COMSIG_ITEM_DROPPED), PROC_REF(drop_detach_tank), user)
 	return TRUE
 
@@ -115,9 +115,34 @@
 
 /obj/item/clothing/mask/breath/proc/detach_tank(source, mob/user)
 	if(attached_tank)
-		attached_tank.close_internals(src, user)
+		close_internals(src, user)
 		return TRUE
 	return FALSE
+
+/obj/item/clothing/mask/breath/proc/close_internals(source, mob/C)
+	C.internal = null	// refactor this and delete
+	to_chat(usr, "<span class='notice'>[bicon(attached_tank)]You close the tank release valve.</span>")
+	var/internalsound = 'sound/misc/internaloff.ogg'
+	update_action_icons(C, FALSE)
+	attached_tank = null
+	if(ishuman(C)) // Because only human can wear a spacesuit
+		var/mob/living/carbon/human/H = C
+		if(istype(H.head, /obj/item/clothing/head/helmet/space) && istype(H.wear_suit, /obj/item/clothing/suit/space))
+			internalsound = 'sound/misc/riginternaloff.ogg'
+	playsound(src, internalsound, VOL_EFFECTS_MASTER, null, FALSE, null, -5)
+
+/obj/item/clothing/mask/breath/proc/open_internals(mob/C)
+	if(!(flags & MASKINTERNALS))
+		update_hanging()
+	C.internal = attached_tank	// refactor this and delete
+	update_action_icons(C, TRUE)
+	to_chat(usr, "<span class='notice'>[bicon(attached_tank)]You open \the [attached_tank] valve.</span>")
+	var/internalsound = 'sound/misc/internalon.ogg'
+	if(ishuman(C)) // Because only human can wear a spacesuit
+		var/mob/living/carbon/human/H = C
+		if(istype(H.head, /obj/item/clothing/head/helmet/space) && istype(H.wear_suit, /obj/item/clothing/suit/space))
+			internalsound = 'sound/misc/riginternalon.ogg'
+	playsound(src, internalsound, VOL_EFFECTS_MASTER, null, FALSE, null, -5)
 
 /obj/item/clothing/mask/breath/proc/update_action_icons(mob/user, status)
 	for(var/datum/action/item_action/hands_free/connect_tank/CT in user.actions)
