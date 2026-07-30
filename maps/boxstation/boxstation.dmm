@@ -57520,7 +57520,7 @@
 /obj/structure/rack,
 /obj/item/clothing/suit/fire/firefighter,
 /obj/item/weapon/tank/oxygen,
-/obj/item/clothing/mask/gas/coloured,
+/obj/item/clothing/mask/breath/gas/coloured,
 /obj/item/weapon/reagent_containers/spray/extinguisher,
 /obj/item/clothing/head/hardhat/red,
 /obj/item/clothing/glasses/meson,
@@ -68731,7 +68731,7 @@
 /area/station/civilian/garden)
 "cIQ" = (
 /obj/structure/rack,
-/obj/item/clothing/mask/gas/coloured,
+/obj/item/clothing/mask/breath/gas/coloured,
 /obj/item/clothing/glasses/sunglasses,
 /obj/effect/decal/turf_decal/set_damaged,
 /turf/simulated/floor/plating,
