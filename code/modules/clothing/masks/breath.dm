@@ -58,7 +58,7 @@
 	if(active)
 		connect_tank(user)
 	else
-		detach_tank(src, user)
+		detach_tank()
 	if(adjustible)
 		update_hanging()
 	update_item_actions()
@@ -115,7 +115,7 @@
 	if(attached_tank && active)
 		toggle_breath(user)
 
-/obj/item/clothing/mask/breath/proc/detach_tank(source)
+/obj/item/clothing/mask/breath/proc/detach_tank()
 	if(attached_tank)
 		close_internals(src)
 		return TRUE
