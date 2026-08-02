@@ -40,7 +40,7 @@
 
 /obj/item/clothing/mask/breath/Destroy()
 	. = ..()
-	QDEL_NULL(attached_tank) // destriy attached
+	detach_tank()
 
 /obj/item/clothing/mask/breath/equipped(mob/user, slot)
 	. = ..()
@@ -102,27 +102,33 @@
 		return FALSE
 
 	attached_tank = choose
-	open_internals(user)
-	RegisterSignals(attached_tank, list(COMSIG_PARENT_QDELETING, COMSIG_ITEM_DROPPED), PROC_REF(drop_detach_tank), user)
+	open_internals()
+	RegisterSignals(attached_tank, list(COMSIG_PARENT_QDELETING, COMSIG_ITEM_DROPPED), PROC_REF(drop_detach_tank), override = TRUE) //override = true, to prevert stuck trace error
 	return TRUE
 
-/obj/item/clothing/mask/breath/proc/drop_detach_tank(obj/source, mob/user)
+/obj/item/clothing/mask/breath/proc/drop_detach_tank(obj/source)
+	if(!iscarbon(loc))
+		return
+	var/mob/living/carbon/user = loc // mask loc
 	if(source.loc == user)
 		return
 	if(attached_tank && active)
 		toggle_breath(user)
-		UnregisterSignal(source, list(COMSIG_PARENT_QDELETING, COMSIG_ITEM_DROPPED))
 
-/obj/item/clothing/mask/breath/proc/detach_tank(source, mob/user)
+/obj/item/clothing/mask/breath/proc/detach_tank(source)
 	if(attached_tank)
-		close_internals(src, user)
+		close_internals(src)
 		return TRUE
 	return FALSE
 
-/obj/item/clothing/mask/breath/proc/close_internals(source, mob/C)
+/obj/item/clothing/mask/breath/proc/close_internals(source)
+	if(!iscarbon(loc))
+		return
+	var/mob/living/carbon/C = loc
 	C.internal = null	// refactor this and delete
 	to_chat(usr, "<span class='notice'>[bicon(attached_tank)]You close the tank release valve.</span>")
 	var/internalsound = 'sound/misc/internaloff.ogg'
+	UnregisterSignal(source, list(COMSIG_PARENT_QDELETING, COMSIG_ITEM_DROPPED)) //crash stuck trace we didn`t  off signal trigger
 	update_action_icons(C, FALSE)
 	attached_tank = null
 	if(ishuman(C)) // Because only human can wear a spacesuit
@@ -131,7 +137,10 @@
 			internalsound = 'sound/misc/riginternaloff.ogg'
 	playsound(src, internalsound, VOL_EFFECTS_MASTER, null, FALSE, null, -5)
 
-/obj/item/clothing/mask/breath/proc/open_internals(mob/C)
+/obj/item/clothing/mask/breath/proc/open_internals()
+	if(!iscarbon(loc))
+		return
+	var/mob/living/carbon/C = loc
 	if(!(flags & MASKINTERNALS))
 		update_hanging()
 	C.internal = attached_tank	// refactor this and delete
