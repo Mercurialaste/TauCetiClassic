@@ -33155,7 +33155,6 @@
 /turf/simulated/floor/plating,
 /area/station/maintenance/disposal)
 "bgg" = (
-/obj/machinery/light/small,
 /obj/machinery/atmospherics/pipe/simple/hidden/supply{
 	dir = 4
 	},
