@@ -7,6 +7,7 @@
 #define DIONA_SAW_ACTION "separating [surgery_victim]'s brain from \his spine with \the [tool]"
 #define SLIME_SAW_ACTION "cut out one of [target]'s cores with \the [tool]"
 /datum/surgery_step/saw_open
+	name = "Saw"
 	allowed_qualities = list(
 		QUALITY_SAW_OPEN,
 		QUALITY_PRYING

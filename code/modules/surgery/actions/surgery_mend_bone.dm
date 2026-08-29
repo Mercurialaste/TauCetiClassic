@@ -6,6 +6,7 @@
 #define MEND_IPC_FACE_ACTION  "repair [surgery_victim]'s screen with \the [tool]"
 
 /datum/surgery_step/mend_bones
+	name = "Glue bone"
 	allowed_qualities = list(
 		QUALITY_MENDING_BONE,
 		QUALITY_MENDING_IPC
