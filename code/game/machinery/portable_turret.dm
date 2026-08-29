@@ -459,8 +459,6 @@ var/global/list/turret_icons
 		popDown()
 		return PROCESS_KILL
 
-	if(!proximity_monitor)
-		proximity_monitor = new(src, anchored ? world.view : null)
 
 	var/list/targets = list()			//list of primary targets
 	var/list/secondarytargets = list()	//targets that are least important
