@@ -5,6 +5,7 @@
 #define MEND_ARTERY_ACTION "patching the damaged vein in [surgery_victim]'s [bodypart.name] with \the [tool]"
 
 /datum/surgery_step/fix_veins
+	name = "FixOvein"
 	allowed_qualities = list(
 		QUALITY_FIX_VEIN
 		)

@@ -287,7 +287,7 @@
 		var/best_quality = 0
 		var/obj/item/best_tool
 		for(var/obj/item/I in items)
-			if(isrobot(user) && istype(S, /datum/surgery_step/cavity/place_item) && robot_carriers && robot_carriers[I] == I)
+			if(isrobot(user) && istype(S, /datum/surgery_step/drill_open/place_item) && robot_carriers && robot_carriers[I] == I)
 				continue
 			var/quality = S.tool_quality(I)
 			if(!quality || quality <= best_quality)

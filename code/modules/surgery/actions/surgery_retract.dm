@@ -16,6 +16,7 @@
 
 // Action
 /datum/surgery_step/retract
+	name = "Retract"
 	allowed_qualities = list(
 		QUALITY_RETRACT,
 		QUALITY_PRYING

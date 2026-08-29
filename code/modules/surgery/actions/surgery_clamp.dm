@@ -10,6 +10,7 @@
 
 // Action
 /datum/surgery_step/clamp
+	name = "Clamp"
 	allowed_qualities = list(
 		QUALITY_CLAMP,
 		QUALITY_WRENCHING

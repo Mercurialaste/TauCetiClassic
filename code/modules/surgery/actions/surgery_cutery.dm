@@ -2,6 +2,7 @@
 #define CUTERIZE_ACTION  "cauterize the incision on [surgery_victim]'s [bodypart.name] with \the [tool]."
 
 /datum/surgery_step/cutery
+	name = "Cauterize"
 	allowed_qualities = list(
 		QUALITY_CAUTER
 		)
