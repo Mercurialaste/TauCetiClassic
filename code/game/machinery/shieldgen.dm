@@ -221,15 +221,12 @@
 	use_power = IDLE_POWER_USE
 	idle_power_usage = 10
 	active_power_usage = 100
+	COOLDOWN_DECLARE(shieldgen_next_procces_time)
 	var/active = FALSE
 	var/steps = 0
-	var/last_check = 0
-	var/check_delay = 10
-	var/recalc = 0
 	var/locked = TRUE
 	var/obj/structure/cable/attached		// the attached cable
 	required_skills = list(/datum/skill/engineering = SKILL_LEVEL_TRAINED)
-	var/next_process_time = 0
 
 /obj/machinery/power/shieldwallgen/interact(mob/user)
 	. = ..()
@@ -266,32 +263,33 @@
 /obj/machinery/power/shieldwallgen/process()
 	if(!anchored || stat & BROKEN)
 		return PROCESS_KILL
-	if(next_process_time <= world.time)
-		next_process_time = world.time + 100
-		// todo: do cool procces later
-		addtimer(CALLBACK(src, PROC_REF(add_load), active_power_usage), 10 SECONDS)
+	if(!COOLDOWN_FINISHED(src, shieldgen_next_procces_time))
+		return FALSE
+	COOLDOWN_START(src, shieldgen_next_procces_time, 10 SECONDS)
+	// todo: do cool procces later
+	addtimer(CALLBACK(src, PROC_REF(add_load), active_power_usage), 10 SECONDS)
 
-		if(active)
-			if(!anchored)
-				active = FALSE
-				update_power_use(idle_power_usage)
-				return PROCESS_KILL
-			// todo: refactor this next time
-			addtimer(CALLBACK(src, PROC_REF(setup_field), 1), 1 SECONDS)
-			addtimer(CALLBACK(src, PROC_REF(setup_field), 2), 2 SECONDS)
-			addtimer(CALLBACK(src, PROC_REF(setup_field), 4), 3 SECONDS)
-			addtimer(CALLBACK(src, PROC_REF(setup_field), 8), 4 SECONDS)
-
-		if(!avail())
-			update_power_use(idle_power_usage)
-			visible_message("<span class='warning'>The [src.name] shuts down due to lack of power!</span>", \
-							"You hear heavy droning fade out")
-			icon_state = "Shield_Gen"
+	if(active)
+		if(!anchored)
 			active = FALSE
-			for(var/dir in list(1,2,4,8))
-				cleanup(dir)
-
+			update_power_use(idle_power_usage)
 			return PROCESS_KILL
+		// todo: refactor this next time
+		addtimer(CALLBACK(src, PROC_REF(setup_field), 1), 1 SECONDS)
+		addtimer(CALLBACK(src, PROC_REF(setup_field), 2), 2 SECONDS)
+		addtimer(CALLBACK(src, PROC_REF(setup_field), 4), 3 SECONDS)
+		addtimer(CALLBACK(src, PROC_REF(setup_field), 8), 4 SECONDS)
+
+	if(!avail())
+		update_power_use(idle_power_usage)
+		visible_message("<span class='warning'>The [src.name] shuts down due to lack of power!</span>", \
+						"You hear heavy droning fade out")
+		icon_state = "Shield_Gen"
+		active = FALSE
+		for(var/dir in list(1,2,4,8))
+			cleanup(dir)
+
+		return PROCESS_KILL
 
 /obj/machinery/power/shieldwallgen/proc/setup_field(NSEW = 0)
 	var/turf/T = src.loc
