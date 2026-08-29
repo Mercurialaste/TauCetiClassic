@@ -5,7 +5,7 @@
 //////////////////////////////////////////////////////////////////
 
 /datum/surgery_step/drill_open
-	name "Drill"
+	name = "Drill"
 	priority = 1
 	allowed_species = null
 
