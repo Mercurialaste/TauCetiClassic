@@ -1,4 +1,11 @@
-/datum/surgery_step/brain/insert_brain
+//Procedures in this file: Inernal wound patching, Implant removal, Fixing groin organs in IPCs and Dioneae
+//////////////////////////////////////////////////////////////////
+//					INTERNAL WOUND PATCHING						//
+//////////////////////////////////////////////////////////////////
+
+
+/datum/surgery_step/fix_vein
+	priority = 2
 	allowed_tools = list(
 	/obj/item/organ/internal/brain = 100
 	)
@@ -69,6 +76,7 @@
 //					GROIN ORGAN PATCHING						//
 //////////////////////////////////////////////////////////////////
 /datum/surgery_step/groin_organs
+	name = "Repair groin organs"
 	priority = 3
 
 	allowed_species = null // Allows surgery for all species, whereas previously it was only allowed for DIONA, IPC, VOX, and PODMAN
@@ -88,6 +96,7 @@
 	return FALSE
 
 /datum/surgery_step/groin_organs/fixing
+	name = "Apply bandage to groin"
 	allowed_tools = list(
 	/obj/item/stack/medical/advanced/bruise_pack= 100,
 	/obj/item/stack/medical/bruise_pack/tajaran = 70,
@@ -97,7 +106,7 @@
 	min_duration = 8 SECONDS
 	max_duration = 10 SECONDS
 
-/datum/surgery_step/groin_organs/fixing/can_use(mob/living/user, mob/living/carbon/human/target, target_zone, obj/item/tool)
+/datum/surgery_step/groin_organs/fixing/can_use(mob/living/user, mob/living/carbon/human/target, target_zone, obj/item/tool, silent = FALSE)
 	if(!..())
 		return FALSE
 	var/obj/item/organ/external/groin/BP = target.get_bodypart(BP_GROIN)
@@ -111,7 +120,8 @@
 				has_treatable = TRUE
 	if(has_treatable)
 		return TRUE
-	necrotic_organs_warning(user, target, dead_organs)
+	if(!silent)
+		necrotic_organs_warning(user, target, dead_organs)
 	return FALSE
 
 /datum/surgery_step/groin_organs/fixing/begin_step(mob/user, mob/living/carbon/human/target, target_zone, obj/item/tool)
@@ -188,8 +198,10 @@
 			IO.take_damage(dam_amt,0)
 
 /datum/surgery_step/groin_organs/fixing_robot //For artificial organs
-	allowed_qualities = list(
-	QUALITY_MENDING_IPC
+	allowed_tools = list(
+	/obj/item/stack/nanopaste = 100,
+	/obj/item/weapon/bonegel = 30,
+	/obj/item/weapon/wrench = 70
 	)
 
 	allowed_species = null // Allows the surgery on prosthetic organs for all species, whereas previously it was only allowed for IPC

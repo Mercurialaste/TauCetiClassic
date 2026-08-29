@@ -146,7 +146,7 @@
 		for(var/modifi_quality in qualities)
 			qualities[modifi_quality] = max(qualities[modifi_quality] + 0.5, 3)
 
-/obj/item/clothing/mask/gas/welding/set_prototype_qualities(rel_val=100, mark=0)
+/obj/item/clothing/mask/breath/gas/welding/set_prototype_qualities(rel_val=100, mark=0)
 	if(!prob(reliability))
 		flash_protection = FALSE
 
