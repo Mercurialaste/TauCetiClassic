@@ -31,6 +31,7 @@
 	var/next_process_time = 0
 	var/list/tile_info[4]
 	var/list/dir_alerts[4] // 4 dirs, bitflags
+	COOLDOWN_DECLARE(fire_door)
 
 	// MUST be in same order as FIREDOOR_ALERT_*
 	var/list/ALERT_STATES=list(
@@ -347,45 +348,46 @@
 	// CHECK PRESSURE
 /obj/machinery/door/firedoor/process()
 	if(density)
-		if(next_process_time <= world.time)
-			next_process_time = world.time + 10 SECONDS		// 10 second delays between process updates
-			var/changed = FALSE
-			lockdown = FALSE
-			// Pressure alerts
-			pdiff = getOPressureDifferential(src.loc)
-			if(pdiff >= FIREDOOR_MAX_PRESSURE_DIFF)
+		if(!COOLDOWN_FINISHED(src, fire_door))
+			return FALSE	// 10 second delays between process updates
+		COOLDOWN_START(src, fire_door, 10 SECONDS)
+		var/changed = FALSE
+		lockdown = FALSE
+		// Pressure alerts
+		pdiff = getOPressureDifferential(src.loc)
+		if(pdiff >= FIREDOOR_MAX_PRESSURE_DIFF)
+			lockdown = TRUE
+			if(!pdiff_alert)
+				pdiff_alert = TRUE
+				changed = TRUE // update_icon()
+		else
+			if(pdiff_alert)
+				pdiff_alert = FALSE
+				changed = TRUE // update_icon()
+
+		tile_info = getCardinalAirInfo(src.loc,list("temperature","pressure"))
+		var/old_alerts = dir_alerts
+		for(var/index in 1 to 4)
+			var/list/tileinfo = tile_info[index]
+			if(!tileinfo)
+				continue // Bad data.
+			var/celsius = convert_k2c(tileinfo[1])
+
+			var/alerts = 0
+
+			// Temperatures
+			if(celsius >= FIREDOOR_MAX_TEMP)
+				alerts |= FIREDOOR_ALERT_HOT
 				lockdown = TRUE
-				if(!pdiff_alert)
-					pdiff_alert = TRUE
-					changed = TRUE // update_icon()
-			else
-				if(pdiff_alert)
-					pdiff_alert = FALSE
-					changed = TRUE // update_icon()
+			else if(celsius <= FIREDOOR_MIN_TEMP)
+				alerts |= FIREDOOR_ALERT_COLD
+				lockdown = TRUE
 
-			tile_info = getCardinalAirInfo(src.loc,list("temperature","pressure"))
-			var/old_alerts = dir_alerts
-			for(var/index in 1 to 4)
-				var/list/tileinfo = tile_info[index]
-				if(!tileinfo)
-					continue // Bad data.
-				var/celsius = convert_k2c(tileinfo[1])
+			dir_alerts[index]=alerts
 
-				var/alerts = 0
-
-				// Temperatures
-				if(celsius >= FIREDOOR_MAX_TEMP)
-					alerts |= FIREDOOR_ALERT_HOT
-					lockdown = TRUE
-				else if(celsius <= FIREDOOR_MIN_TEMP)
-					alerts |= FIREDOOR_ALERT_COLD
-					lockdown = TRUE
-
-				dir_alerts[index]=alerts
-
-			if(dir_alerts != old_alerts)
-				changed = TRUE
-			if(changed)
-				update_icon()
+		if(dir_alerts != old_alerts)
+			changed = TRUE
+		if(changed)
+			update_icon()
 	else
 		return PROCESS_KILL
