@@ -158,16 +158,16 @@
 	check_alarms()		//Checks if there are fire alarms in any areas associated with that firedoor
 
 	if(density)
-		INVOKE_ASYNC(src, PROC_REF(open))
+		open()
 		if(alarmed)
 			addtimer(CALLBACK(src, PROC_REF(check_late_close)), 5 SECONDS, TIMER_UNIQUE | TIMER_OVERRIDE)
 	else
-		INVOKE_ASYNC(src, PROC_REF(close))
+		close()
 
 /obj/machinery/door/firedoor/proc/check_late_close()
 	check_alarms()
 	if(alarmed)
-		INVOKE_ASYNC(src, PROC_REF(close))
+		close()
 		return TRUE
 	return FALSE
 
@@ -243,9 +243,9 @@
 					"You force \the [ blocked ? "welded" : "" ] [src] [density ? "open" : "closed"] with \the [C]!",\
 					"You hear metal strain and groan, and a door [density ? "open" : "close"].")
 			if(density)
-				INVOKE_ASYNC(src, PROC_REF(open))
+				open()
 			else
-				INVOKE_ASYNC(src, PROC_REF(close))
+				close()
 			return
 
 /obj/machinery/door/firedoor/deconstruct(disassembled = TRUE)
