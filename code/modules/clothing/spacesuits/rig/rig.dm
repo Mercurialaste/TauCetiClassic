@@ -1,3 +1,6 @@
+#define RIG_PASSIVE_ENERGY_USE 1
+#define RIG_MOVE_ENERGY_USE = 1
+
 //Regular rig suits
 /obj/item/clothing/head/helmet/space/rig
 	name = "hardsuit helmet"
@@ -103,7 +106,6 @@
 
 	var/obj/item/clothing/shoes/magboots/boots = null           // Deployable boots, if any.
 	var/boots_type = /obj/item/clothing/shoes/magboots
-	var/attached_helmet = 1                                     // Can't wear a helmet if one is deployable.
 	var/obj/item/clothing/head/helmet/space/rig/helmet = null   // Deployable helmet, if any.
 	var/helmet_type = null
 
@@ -114,8 +116,6 @@
 
 	var/mob/living/carbon/human/wearer                          // The person currently wearing the rig.
 	var/offline = TRUE
-	var/passive_energy_use = 1
-	var/move_energy_use = 1
 
 	var/interface_title = "Hardsuit Controller"
 	var/interface_path = "hardsuit.tmpl"
@@ -168,7 +168,7 @@
 	if(!istype(rig))
 		return
 	if(!rig.offline)
-		rig.cell.use(rig.move_energy_use)
+		rig.cell.use(RIG_MOVE_ENERGY_USE)
 
 /obj/item/clothing/suit/space/rig/attack_reaction(mob/living/L, reaction_type, mob/living/carbon/human/T = null)
 	if(reaction_type == REACTION_ITEM_TAKE || reaction_type == REACTION_ITEM_TAKEOFF)
@@ -327,7 +327,7 @@
 
 
 	if(!offline)
-		var/total_energy_use = passive_energy_use
+		var/total_energy_use = RIG_PASSIVE_ENERGY_USE
 
 		for(var/obj/item/rig_module/module in installed_modules)
 			total_energy_use += module.process_module()

@@ -13,10 +13,6 @@
 			to_chat(user, "How do you propose to modify a hardsuit while it is being worn?")
 			return
 
-		//Installing a component into or modifying the contents of the feet.
-		if(!attached_boots)
-			to_chat(user, "\The [src] does not have boot mounts.")
-			return
 
 		if(boots)
 			to_chat(user, "\The [src] already has magboots installed.")
